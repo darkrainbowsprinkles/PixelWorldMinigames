@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 7920091746764745333}
   - component: {fileID: 5158521590146710207}
   - component: {fileID: 81581090782395906}
-  - component: {fileID: 1269457314873368957}
+  - component: {fileID: 3414806230575664922}
   m_Layer: 5
-  m_Name: Tile Grid
+  m_Name: Tile Grid UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -198,7 +198,7 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1269457314873368957
+--- !u!114 &3414806230575664922
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -211,4 +211,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 2122890862399112198, guid: 4d2dec0cc2d8467498e0e96a2448b631, type: 3}
-  notes: []
+  staticColors: 1
+  staticNotes: 1
