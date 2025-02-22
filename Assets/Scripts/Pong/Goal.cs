@@ -5,6 +5,7 @@ namespace PixelWorld.Pong
 {
     public class Goal : MonoBehaviour
     {
+        [SerializeField] Goal oppositeGoal;
         int score = 0;
         public event Action OnScoreUpdate;
 
@@ -23,7 +24,7 @@ namespace PixelWorld.Pong
         {
             if(other.TryGetComponent(out Ball ball))
             {
-                UpdateScore(ball.GetScorePoints());
+                oppositeGoal.UpdateScore(ball.GetScorePoints());
 
                 if(ball.IsSplitBall())
                 {
