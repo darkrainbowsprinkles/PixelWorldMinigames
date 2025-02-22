@@ -12,30 +12,30 @@ namespace PixelWorld.Pong
 
         void OnEnable()
         {
-            player1Goal.OnGoalScored += UpdatePlayer1Score;
-            player2Goal.OnGoalScored += UpdatePlayer2Score;
+            player1Goal.OnScoreUpdate += UpdatePlayer1Score;
+            player2Goal.OnScoreUpdate += UpdatePlayer2Score;
         }
 
         void OnDisable()
         {
-            player1Goal.OnGoalScored -= UpdatePlayer1Score;
-            player2Goal.OnGoalScored -= UpdatePlayer2Score;
+            player1Goal.OnScoreUpdate -= UpdatePlayer1Score;
+            player2Goal.OnScoreUpdate -= UpdatePlayer2Score;
         }
 
         void Start()
         {
-            UpdatePlayer1Score(0);
-            UpdatePlayer2Score(0);
+            UpdatePlayer1Score();
+            UpdatePlayer2Score();
         }
 
-        void UpdatePlayer1Score(int score)
+        void UpdatePlayer1Score()
         {
-            player1ScoreText.text = $"{score}";
+            player1ScoreText.text = $"{player1Goal.GetScore()}";
         }
 
-        void UpdatePlayer2Score(int score)
+        void UpdatePlayer2Score()
         {
-            player2ScoreText.text = $"{score}";
+            player2ScoreText.text = $"{player2Goal.GetScore()}";
         }
     }
 }

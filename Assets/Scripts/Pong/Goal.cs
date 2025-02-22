@@ -6,14 +6,33 @@ namespace PixelWorld.Pong
     public class Goal : MonoBehaviour
     {
         int score = 0;
-        public event Action<int> OnGoalScored;
+        public event Action OnScoreUpdate;
+
+        public void UpdateScore(int score)
+        {
+            this.score += score;
+            OnScoreUpdate.Invoke();
+        }
+
+        public int GetScore()
+        {
+            return score;
+        }
 
         void OnTriggerEnter2D(Collider2D other)
         {
             if(other.TryGetComponent(out Ball ball))
             {
-                OnGoalScored.Invoke(score += ball.GetScorePoints());
-                ball.Reset();
+                UpdateScore(ball.GetScorePoints());
+
+                if(ball.IsSplitBall())
+                {
+                    Destroy(ball.gameObject);
+                }
+                else
+                {
+                    ball.Reset();
+                }
             }
         }
     }

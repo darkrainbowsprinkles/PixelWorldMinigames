@@ -6,8 +6,11 @@ namespace PixelWorld.Pong
     {
         [SerializeField] float speed = 1;
         [SerializeField] int scorePoints = 10;
+        [SerializeField] int paddleHitPenalty = 5;
+        [SerializeField, Range(0,1)] float splitChance = 0.2f;
         Rigidbody2D rigidBody;
         Vector3 startPosition;
+        bool isSplitBall = false;
 
         public void Reset()
         {
@@ -16,9 +19,44 @@ namespace PixelWorld.Pong
             Launch();
         }
 
+        public int GetPaddleHitPenalty()
+        {
+            return paddleHitPenalty;
+        }
+
         public int GetScorePoints()
         {
             return scorePoints;
+        }
+
+        public bool IsSplitBall()
+        {
+            return isSplitBall;
+        }
+
+        public void TrySplit()
+        {
+            if(isSplitBall)
+            {
+                return;
+            }
+
+            if(Random.value < splitChance)
+            {
+                Ball newBall = Instantiate(this, transform.position, Quaternion.identity);
+                newBall.scorePoints *= 2;
+                newBall.isSplitBall = true;
+                newBall.GetComponent<SpriteRenderer>().color = Color.yellow;
+                LaunchOppositeDirection(newBall);
+            }
+        }
+
+        void LaunchOppositeDirection(Ball newBall)
+        {
+            Vector2 currentVelocity = rigidBody.velocity.normalized;
+            newBall.rigidBody.velocity = -currentVelocity * speed;
+            newBall.transform.position += (Vector3)currentVelocity * 0.2f;
+            rigidBody.velocity = currentVelocity * speed;
         }
 
         void Awake()
