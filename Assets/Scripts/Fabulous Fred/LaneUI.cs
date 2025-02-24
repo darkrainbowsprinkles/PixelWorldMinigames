@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,11 +10,13 @@ namespace PixelWorld.FabulousFred
     {
         const float tileSelectionDuration = 1;
         Button[] tiles;
+        Dictionary<Button, int> tileSequence = new();
+        int tileSequenceCount = 0;
 
         void Start()
         {
             FillTiles();
-            StartCoroutine(TileSelectionSequence(20));
+            StartCoroutine(TileSelectionSequence(3));
         }
 
         void FillTiles()
@@ -22,25 +25,54 @@ namespace PixelWorld.FabulousFred
 
             for(int i = 0; i < transform.childCount; i++)
             {   
-                tiles[i] = transform.GetChild(i).GetComponent<Button>();
+                Button tile = transform.GetChild(i).GetComponent<Button>();
+                tiles[i] = tile;
+                tile.onClick.AddListener(() => CheckTileSequence(tile));
             }
         }
 
-        IEnumerator TileSelectionSequence(int selectionTimes)
+        void CheckTileSequence(Button tile)
         {
-            int tileCount = 0;
-
-            while(tileCount < selectionTimes)
+            if(tileSequence.ContainsKey(tile) && tileSequence[tile] == tileSequenceCount)
             {
-                int randomTileIndex = Random.Range(0, tiles.Length);
-
-                print(randomTileIndex);
-
-                yield return StartCoroutine(SimulateClickRoutine(tiles[randomTileIndex]));
-
-                tileCount++;
+                print("Right sequence");
+                tileSequenceCount++;
+            }
+            else
+            {
+                print("Wrong sequence");
+                tileSequenceCount = 0;
             }
         }
+
+IEnumerator TileSelectionSequence(int selectionTimes)
+{
+    int tileCount = 0;
+    Button lastSelectedTile = null; // Keep track of the last selected tile
+
+    while (tileCount < selectionTimes)
+    {
+        int randomTileIndex;
+        Button randomTile;
+
+        // Ensure the new tile is different from the last selected one
+        do
+        {
+            randomTileIndex = Random.Range(0, tiles.Length);
+            randomTile = tiles[randomTileIndex];
+        } 
+        while (randomTile == lastSelectedTile); 
+
+        lastSelectedTile = randomTile; // Update last selected tile
+
+        tileSequence[randomTile] = tileCount;
+
+        yield return StartCoroutine(SimulateClickRoutine(randomTile));
+
+        tileCount++;
+    }
+}
+
 
         IEnumerator SimulateClickRoutine(Button tile)
         {
