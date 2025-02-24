@@ -16,6 +16,7 @@ namespace PixelWorld.FabulousFred
         Dictionary<Button, int> tileSequence = new();
         Dictionary<Button, ColorBlock> originalTileColors = new();
         int tileSequenceCount = 0;
+        bool isSimulatingClick = false;
 
         void Start()
         {
@@ -28,16 +29,32 @@ namespace PixelWorld.FabulousFred
             tiles = new Button[transform.childCount];
 
             for(int i = 0; i < transform.childCount; i++)
-            {   
+            {
                 Button tile = transform.GetChild(i).GetComponent<Button>();
                 tiles[i] = tile;
                 originalTileColors[tile] = tile.colors;
-                tile.onClick.AddListener(() => CheckTileSequence(tile));
+                HandleTilePressedEvent(tile);
             }
+        }
+
+        void HandleTilePressedEvent(Button tile)
+        {
+            EventTrigger trigger = tile.gameObject.AddComponent<EventTrigger>();
+            EventTrigger.Entry entry = new();
+
+            entry.eventID = EventTriggerType.PointerDown; 
+            entry.callback.AddListener(a => CheckTileSequence(tile));
+
+            trigger.triggers.Add(entry);
         }
 
         void CheckTileSequence(Button tile)
         {
+            if(isSimulatingClick)
+            {
+                return;
+            }
+
             if(tileSequence.ContainsKey(tile) && tileSequence[tile] == tileSequenceCount)
             {
                 print("Right sequence");
@@ -72,11 +89,13 @@ namespace PixelWorld.FabulousFred
 
             SetTilesInteraction(false);
 
-            if (generateNewSequence)
+            isSimulatingClick = true;
+
+            if(generateNewSequence)
             {
                 tileSequence.Clear();
 
-                while (tileCount < selectionTimes)
+                while(tileCount < selectionTimes)
                 {
                     int randomTileIndex;
                     Button randomTile;
@@ -86,7 +105,7 @@ namespace PixelWorld.FabulousFred
                         randomTileIndex = Random.Range(0, tiles.Length);
                         randomTile = tiles[randomTileIndex];
                     } 
-                    while (randomTile == lastSelectedTile); 
+                    while(randomTile == lastSelectedTile); 
 
                     lastSelectedTile = randomTile; 
 
@@ -100,6 +119,8 @@ namespace PixelWorld.FabulousFred
             {
                 yield return StartCoroutine(SimulateClickRoutine(key));
             }
+
+            isSimulatingClick = false;
 
             SetTilesInteraction(true);
         }
