@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -57,14 +58,34 @@ namespace PixelWorld.FabulousFred
 
             if(tileSequence.ContainsKey(tile) && tileSequence[tile] == tileSequenceCount)
             {
-                print("Right sequence");
                 tileSequenceCount++;
+
+                if(tileSequenceCount == selectionTimes)
+                {
+                    tileSequenceCount = 0;
+                    StartCoroutine(NewSequenceRoutine());
+                }
             }
             else
             {
-                StartCoroutine(ResetSequenceRoutine());
                 tileSequenceCount = 0;
+                StartCoroutine(ResetSequenceRoutine());
             }
+        }
+
+        IEnumerator NewSequenceRoutine()
+        {
+            SetTilesInteraction(false);
+            SetTilesColor(Color.green);
+
+            yield return new WaitForSeconds(resetDelay);
+
+            ResetTilesColor();
+
+            yield return new WaitForSeconds(showSequenceDelay);
+            yield return StartCoroutine(TileSelectionSequence(true));
+
+            SetTilesInteraction(true);
         }
 
         IEnumerator ResetSequenceRoutine()
@@ -84,9 +105,6 @@ namespace PixelWorld.FabulousFred
 
         IEnumerator TileSelectionSequence(bool generateNewSequence)
         {
-            int tileCount = 0;
-            Button lastSelectedTile = null; 
-
             SetTilesInteraction(false);
 
             isSimulatingClick = true;
@@ -95,31 +113,25 @@ namespace PixelWorld.FabulousFred
             {
                 tileSequence.Clear();
 
-                while(tileCount < selectionTimes)
+                for(int i = 0; i < selectionTimes; i++)
                 {
-                    int randomTileIndex;
                     Button randomTile;
 
                     do
                     {
-                        randomTileIndex = Random.Range(0, tiles.Length);
-                        randomTile = tiles[randomTileIndex];
+                        randomTile = tiles[Random.Range(0, tiles.Length)];
                     } 
-                    while(randomTile == lastSelectedTile); 
+                    while(tileSequence.ContainsKey(randomTile));
 
-                    lastSelectedTile = randomTile; 
-
-                    tileSequence[randomTile] = tileCount;
-
-                    tileCount++;
+                    tileSequence[randomTile] = i;
                 }
             }
-
+  
             foreach(var key in tileSequence.Keys)
             {
                 yield return StartCoroutine(SimulateClickRoutine(key));
             }
-
+    
             isSimulatingClick = false;
 
             SetTilesInteraction(true);
