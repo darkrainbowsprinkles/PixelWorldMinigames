@@ -8,15 +8,19 @@ namespace PixelWorld.FabulousFred
 {
     public class LaneUI : MonoBehaviour
     {
+        [SerializeField] int selectionTimes = 3;
+        [SerializeField] float resetDelay = 2;
+        [SerializeField] float showSequenceDelay = 1;
         const float tileSelectionDuration = 1;
         Button[] tiles;
         Dictionary<Button, int> tileSequence = new();
+        Dictionary<Button, ColorBlock> originalTileColors = new();
         int tileSequenceCount = 0;
 
         void Start()
         {
             FillTiles();
-            StartCoroutine(TileSelectionSequence(3));
+            StartCoroutine(TileSelectionSequence(true));
         }
 
         void FillTiles()
@@ -27,6 +31,7 @@ namespace PixelWorld.FabulousFred
             {   
                 Button tile = transform.GetChild(i).GetComponent<Button>();
                 tiles[i] = tile;
+                originalTileColors[tile] = tile.colors;
                 tile.onClick.AddListener(() => CheckTileSequence(tile));
             }
         }
@@ -40,39 +45,99 @@ namespace PixelWorld.FabulousFred
             }
             else
             {
-                print("Wrong sequence");
+                StartCoroutine(ResetSequenceRoutine());
                 tileSequenceCount = 0;
             }
         }
 
-IEnumerator TileSelectionSequence(int selectionTimes)
-{
-    int tileCount = 0;
-    Button lastSelectedTile = null; // Keep track of the last selected tile
-
-    while (tileCount < selectionTimes)
-    {
-        int randomTileIndex;
-        Button randomTile;
-
-        // Ensure the new tile is different from the last selected one
-        do
+        IEnumerator ResetSequenceRoutine()
         {
-            randomTileIndex = Random.Range(0, tiles.Length);
-            randomTile = tiles[randomTileIndex];
-        } 
-        while (randomTile == lastSelectedTile); 
+            SetTilesInteraction(false);
+            SetTilesColor(Color.red);
 
-        lastSelectedTile = randomTile; // Update last selected tile
+            yield return new WaitForSeconds(resetDelay);
 
-        tileSequence[randomTile] = tileCount;
+            ResetTilesColor();
 
-        yield return StartCoroutine(SimulateClickRoutine(randomTile));
+            yield return new WaitForSeconds(showSequenceDelay);
+            yield return StartCoroutine(TileSelectionSequence(false));
 
-        tileCount++;
-    }
-}
+            SetTilesInteraction(true);
+        }
 
+        IEnumerator TileSelectionSequence(bool generateNewSequence)
+        {
+            int tileCount = 0;
+            Button lastSelectedTile = null; 
+
+            SetTilesInteraction(false);
+
+            if (generateNewSequence)
+            {
+                tileSequence.Clear();
+
+                while (tileCount < selectionTimes)
+                {
+                    int randomTileIndex;
+                    Button randomTile;
+
+                    do
+                    {
+                        randomTileIndex = Random.Range(0, tiles.Length);
+                        randomTile = tiles[randomTileIndex];
+                    } 
+                    while (randomTile == lastSelectedTile); 
+
+                    lastSelectedTile = randomTile; 
+
+                    tileSequence[randomTile] = tileCount;
+
+                    tileCount++;
+                }
+            }
+
+            foreach(var key in tileSequence.Keys)
+            {
+                yield return StartCoroutine(SimulateClickRoutine(key));
+            }
+
+            SetTilesInteraction(true);
+        }
+
+
+        void SetTilesInteraction(bool enabled)
+        {
+            foreach(var tile in tiles)
+            {
+                tile.GetComponent<Image>().raycastTarget = enabled;
+            }
+        }
+
+        void SetTilesColor(Color color)
+        {
+            foreach(var tile in tiles)
+            {
+                SetTileColor(tile, color);
+            }
+        }
+        
+        void SetTileColor(Button tile, Color color)
+        {
+            ColorBlock colorBlock = tile.colors;
+            colorBlock.normalColor = color;
+            colorBlock.selectedColor = color;
+            colorBlock.pressedColor = color;
+            colorBlock.highlightedColor = color;
+            tile.colors = colorBlock;
+        }
+
+        void ResetTilesColor()
+        {
+            foreach(var tile in tiles)
+            {
+                tile.colors = originalTileColors[tile];
+            }
+        }
 
         IEnumerator SimulateClickRoutine(Button tile)
         {
