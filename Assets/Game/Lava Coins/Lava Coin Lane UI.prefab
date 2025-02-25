@@ -238,7 +238,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2986606949464039247
 RectTransform:
   m_ObjectHideFlags: 0
@@ -449,8 +449,9 @@ MonoBehaviour:
   coinsContainer: {fileID: 1408517245966389611}
   scoreText: {fileID: 6667164582024380073}
   lavaWarningText: {fileID: 418768886015565252}
+  activateLavaTime: 5
   lavaDuration: 5
-  reenableDelay: 1
+  coinReenableDelay: 0.5
 --- !u!1001 &131923559174676315
 PrefabInstance:
   m_ObjectHideFlags: 0

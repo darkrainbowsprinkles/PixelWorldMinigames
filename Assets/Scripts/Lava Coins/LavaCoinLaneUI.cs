@@ -12,8 +12,9 @@ namespace PixelWorld.FabulousFred
         [SerializeField] Transform coinsContainer;
         [SerializeField] TMP_Text scoreText;
         [SerializeField] TMP_Text lavaWarningText;
+        [SerializeField] float activateLavaTime = 15;
         [SerializeField] float lavaDuration = 5;
-        [SerializeField] float reenableDelay = 0.5f; 
+        [SerializeField] float coinReenableDelay = 0.5f; 
         Button[] coins;
         int score = 0;
         int collectedCoins = 0;
@@ -24,9 +25,9 @@ namespace PixelWorld.FabulousFred
         void Start()
         {
             FillLavaCoins();
-            StartCoroutine(ActivateLavaRoutine());
             HandlePressedEvent(gameObject, a => LavaStep());
             UpdateScore(0);
+            StartCoroutine(LavaRoutineLoop());
         }
 
         void FillLavaCoins()
@@ -80,14 +81,31 @@ namespace PixelWorld.FabulousFred
             {
                 if(!coin.image.enabled)
                 {
-                    yield return new WaitForSeconds(reenableDelay);
+                    if(lavaActive)
+                    {
+                        DisableUnselectedCoins();
+                        yield break;
+                    }
+
+                    yield return new WaitForSeconds(coinReenableDelay);
                     coin.image.enabled = true;
                 }
             }
         }
 
+        IEnumerator LavaRoutineLoop()
+        {
+            while(true)
+            {
+                yield return new WaitForSeconds(activateLavaTime);
+                yield return StartCoroutine(ActivateLavaRoutine());
+            }
+        }
+
         IEnumerator ActivateLavaRoutine()
         {
+            lavaWarningText.gameObject.SetActive(true);
+
             yield return StartCoroutine(CountDownRoutine());
 
             lavaActive = true;
@@ -106,6 +124,8 @@ namespace PixelWorld.FabulousFred
 
             image.raycastTarget = false;
             image.color = originalColor;
+
+            lavaWarningText.gameObject.SetActive(false);
 
             lavaActive = false;
         }
