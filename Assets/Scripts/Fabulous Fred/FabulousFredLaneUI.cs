@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace PixelWorld.FabulousFred
 {
-    public class LaneUI : MonoBehaviour
+    public class FabulousFredLaneUI : MonoBehaviour
     {
         [SerializeField] LevelData[] levelsData;
         [SerializeField] int rightSequencePoints = 10;
