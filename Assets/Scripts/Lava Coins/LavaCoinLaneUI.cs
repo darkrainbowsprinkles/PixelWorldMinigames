@@ -15,6 +15,11 @@ namespace PixelWorld.FabulousFred
         [SerializeField] float activateLavaTime = 15;
         [SerializeField] float lavaDuration = 5;
         [SerializeField] float coinReenableDelay = 0.5f; 
+        [SerializeField] int coinPoints = 1;
+        [SerializeField] int lavaCoinPenalty = 5;
+        [SerializeField] float countdownBaseTime = 1;
+        [SerializeField] float countdownSpeedMultiplier = 1;
+        [SerializeField] float countdownMinTime = 0.2f;
         Button[] coins;
         int score = 0;
         int collectedCoins = 0;
@@ -60,7 +65,7 @@ namespace PixelWorld.FabulousFred
             collectedCoins++;
             lastSelectedCoin = coin;
 
-            UpdateScore(1);
+            UpdateScore(coinPoints);
 
             if(collectedCoins >= totalCoins / 3)
             {
@@ -156,20 +161,24 @@ namespace PixelWorld.FabulousFred
 
         IEnumerator CountDownRoutine()
         {
+            float waitTime = Mathf.Max(countdownBaseTime / countdownSpeedMultiplier, countdownMinTime);
+
             lavaWarningText.text = "3!";
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(waitTime);
             lavaWarningText.text = "2!";
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(waitTime);
             lavaWarningText.text = "1!";
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(waitTime);
             lavaWarningText.text = "LAVA!";
+
+            countdownSpeedMultiplier += 0.2f; 
         }
 
         void LavaStep()
         {
             if(lavaActive)
             {
-                UpdateScore(-1);
+                UpdateScore(-lavaCoinPenalty);
             }
         }
     }
