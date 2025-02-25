@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -11,15 +11,15 @@ namespace PixelWorld.FabulousFred
     public class LaneUI : MonoBehaviour
     {
         [SerializeField] LevelData[] levelsData;
+        [SerializeField] Transform sequencerButtonsContainer;
         [SerializeField] Button startButton;
-        [SerializeField] float showSequenceDelay = 1;
-        Button[] buttons;
-        Dictionary<Button, int> buttonSequence = new();
-        Dictionary<Button, ColorBlock> originalButtonColors = new();
-        int buttonSequenceCount = 0;
+        [SerializeField] TMP_Text levelText;
+        Button[] sequencerButtons;
+        Dictionary<int, Dictionary<Button, int>> sequenceLookup = new();
+        Dictionary<Button, ColorBlock> originalColorsLookup = new();
+        int sequenceCount = 0;
         int currentLevel = 0;
-        bool isSimulatingClick = false;
-        bool isStartButtonPressed = false;
+        bool inSelectionSequence = false;
 
         [System.Serializable]
         struct LevelData
@@ -30,38 +30,46 @@ namespace PixelWorld.FabulousFred
 
         void Start()
         {
-            FillButtons();
-
-            HandleButtonPressedEvent(startButton, a => isStartButtonPressed = true);
-
-            StartCoroutine(ButtonSelectionSequence(true));
+            FillSequencerButtons();
+            FillSequenceLookup();
+            UpdateLevelText();
+            HandleButtonPressedEvent(startButton, a => StartCoroutine(ButtonSequenceRoutine()));
         }
 
-        void FillButtons()
+        void FillSequencerButtons()
         {
-            Transform[] filteredChildren = GetFilteredChildren().ToArray();
+            sequencerButtons = new Button[sequencerButtonsContainer.childCount];
 
-            buttons = new Button[filteredChildren.Count()];
-
-            for(int i = 0; i < filteredChildren.Length; i++)
+            for(int i = 0; i < sequencerButtonsContainer.childCount; i++)
             {
-                Button button = filteredChildren[i].GetComponent<Button>();
-                buttons[i] = button;
-                originalButtonColors[button] = button.colors;
+                Button button = sequencerButtonsContainer.GetChild(i).GetComponent<Button>();
+                sequencerButtons[i] = button;
+                originalColorsLookup[button] = button.colors;
                 HandleButtonPressedEvent(button, a => CheckButtonsSequence(button));
             }
         }
 
-        IEnumerable<Transform> GetFilteredChildren()
+        void FillSequenceLookup()
         {
-            for(int i = 0; i < transform.childCount; i++)
+            for(int i = 0; i < levelsData.Length; i++)
             {
-                Transform child = transform.GetChild(i);
+                Dictionary<Button, int> sequenceIndexes = new();
 
-                if(child.CompareTag("Sequencer"))
+                LevelData levelData = levelsData[i];
+
+                for(int j = 0; j < levelData.sequenceLength; j++)
                 {
-                    yield return child;
+                    Button randomButton;
+                    do
+                    {
+                        randomButton = sequencerButtons[Random.Range(0, sequencerButtons.Length)];
+                    } 
+                    while(sequenceIndexes.ContainsKey(randomButton));
+
+                    sequenceIndexes[randomButton] = j;
                 }
+
+                sequenceLookup[i] = sequenceIndexes;
             }
         }
 
@@ -78,95 +86,58 @@ namespace PixelWorld.FabulousFred
 
         void CheckButtonsSequence(Button button)
         {
-            if(isSimulatingClick)
+            if(inSelectionSequence)
             {
                 return;
             }
 
-            if(buttonSequence.ContainsKey(button) && buttonSequence[button] == buttonSequenceCount)
+            if(ButtonInSequence(button))
             {
-                buttonSequenceCount++;
+                sequenceCount++;
 
-                if(buttonSequenceCount == levelsData[currentLevel].sequenceLength)
+                if(LevelSucceded())
                 {
+                    sequenceCount = 0;
                     CycleCurrentLevel();
-                    buttonSequenceCount = 0;
-                    StartCoroutine(NewSequenceRoutine());
+                    SetAllButtonsInteraction(false);
+                    SetAllButtonsColor(Color.green);
                 }
             }
             else
             {
-                buttonSequenceCount = 0;
-                StartCoroutine(FailedSequenceRoutine());
+                sequenceCount = 0;
+                SetAllButtonsInteraction(false);
+                SetAllButtonsColor(Color.red);
             }
         }
 
-        IEnumerator NewSequenceRoutine()
+        bool ButtonInSequence(Button button)
         {
-            SetAllButtonsInteraction(false);
-            SetAllButtonsColor(Color.green);
-            
-            isStartButtonPressed = false;
-
-            yield return new WaitUntil(() => isStartButtonPressed);
-
-            ResetAllButtonsColor();
-
-            yield return new WaitForSeconds(showSequenceDelay);
-            yield return StartCoroutine(ButtonSelectionSequence(true));
-
-            SetAllButtonsInteraction(true);
+            return sequenceLookup[currentLevel].ContainsKey(button) && sequenceLookup[currentLevel][button] == sequenceCount;
         }
 
-        IEnumerator FailedSequenceRoutine()
+        bool LevelSucceded()
         {
-            SetAllButtonsInteraction(false);
-            SetAllButtonsColor(Color.red);
-
-            isStartButtonPressed = false;
-
-            yield return new WaitUntil(() => isStartButtonPressed);
-
-            ResetAllButtonsColor();
-
-            yield return new WaitForSeconds(showSequenceDelay);
-            yield return StartCoroutine(ButtonSelectionSequence(false));
-
-            SetAllButtonsInteraction(true);
+            return sequenceCount == levelsData[currentLevel].sequenceLength;
         }
 
-        IEnumerator ButtonSelectionSequence(bool generateNewSequence)
+        IEnumerator ButtonSequenceRoutine()
         {
+            inSelectionSequence = true;
+
+            ResetAllButtonsColor();
             SetAllButtonsInteraction(false);
-
-            isSimulatingClick = true;
-
-            if(generateNewSequence)
-            {
-                buttonSequence.Clear();
-
-                for(int i = 0; i < levelsData[currentLevel].sequenceLength; i++)
-                {
-                    Button randomTile;
-
-                    do
-                    {
-                        randomTile = buttons[Random.Range(0, buttons.Length)];
-                    } 
-                    while(buttonSequence.ContainsKey(randomTile));
-
-                    buttonSequence[randomTile] = i;
-                }
-            }
+            SetButtonInteraction(startButton, false);
   
-            foreach(var key in buttonSequence.Keys)
+            foreach(var key in sequenceLookup[currentLevel].Keys)
             {
                 yield return StartCoroutine(SimulateClickRoutine(key));
             }
-    
-            isSimulatingClick = false;
 
             SetAllButtonsInteraction(true);
+            SetButtonInteraction(startButton, true);
+    
+            inSelectionSequence = false;
         }
 
         void CycleCurrentLevel()
@@ -174,12 +145,18 @@ namespace PixelWorld.FabulousFred
             if(currentLevel < levelsData.Length - 1)
             {
                 currentLevel++;
+                UpdateLevelText();
             }
+        }
+
+        void UpdateLevelText()
+        {
+            levelText.text = $"Lvl:{currentLevel + 1}";
         }
 
         void SetAllButtonsInteraction(bool enabled)
         {
-            foreach(var tile in buttons)
+            foreach(var tile in sequencerButtons)
             {
                 SetButtonInteraction(tile, enabled);
             }
@@ -187,12 +164,20 @@ namespace PixelWorld.FabulousFred
 
         void SetAllButtonsColor(Color color)
         {
-            foreach(var tile in buttons)
+            foreach(var tile in sequencerButtons)
             {
                 SetButtonColor(tile, color);
             }
         }
-        
+
+        void ResetAllButtonsColor()
+        {
+            foreach(var tile in sequencerButtons)
+            {
+                tile.colors = originalColorsLookup[tile];
+            }
+        }
+
         void SetButtonColor(Button button, Color color)
         {
             ColorBlock colorBlock = button.colors;
@@ -201,14 +186,6 @@ namespace PixelWorld.FabulousFred
             colorBlock.pressedColor = color;
             colorBlock.highlightedColor = color;
             button.colors = colorBlock;
-        }
-
-        void ResetAllButtonsColor()
-        {
-            foreach(var tile in buttons)
-            {
-                tile.colors = originalButtonColors[tile];
-            }
         }
 
         void SetButtonInteraction(Button button, bool enabled)
