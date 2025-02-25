@@ -11,14 +11,18 @@ namespace PixelWorld.FabulousFred
     public class LaneUI : MonoBehaviour
     {
         [SerializeField] LevelData[] levelsData;
+        [SerializeField] int rightSequencePoints = 10;
+        [SerializeField] int mistakePenaltyPoints = 2;
         [SerializeField] Transform sequencerButtonsContainer;
         [SerializeField] Button startButton;
         [SerializeField] TMP_Text levelText;
+        [SerializeField] TMP_Text scoreText;
         Button[] sequencerButtons;
         Dictionary<int, Dictionary<Button, int>> sequenceLookup = new();
         Dictionary<Button, ColorBlock> originalColorsLookup = new();
         int sequenceCount = 0;
         int currentLevel = 0;
+        int score = 0;
         bool inSelectionSequence = false;
 
         [System.Serializable]
@@ -33,6 +37,7 @@ namespace PixelWorld.FabulousFred
             FillSequencerButtons();
             FillSequenceLookup();
             UpdateLevelText();
+            UpdateScore(0);
             HandleButtonPressedEvent(startButton, a => StartCoroutine(ButtonSequenceRoutine()));
         }
 
@@ -95,6 +100,8 @@ namespace PixelWorld.FabulousFred
             {
                 sequenceCount++;
 
+                UpdateScore(rightSequencePoints);
+
                 if(LevelSucceded())
                 {
                     sequenceCount = 0;
@@ -105,10 +112,17 @@ namespace PixelWorld.FabulousFred
             }
             else
             {
+                UpdateScore(-mistakePenaltyPoints);
                 sequenceCount = 0;
                 SetAllButtonsInteraction(false);
                 SetAllButtonsColor(Color.red);
             }
+        }
+
+        void UpdateScore(int points)
+        {
+            score += points;
+            scoreText.text = score.ToString();
         }
 
         bool ButtonInSequence(Button button)
