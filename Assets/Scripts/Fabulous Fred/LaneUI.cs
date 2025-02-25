@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -9,42 +10,68 @@ namespace PixelWorld.FabulousFred
 {
     public class LaneUI : MonoBehaviour
     {
-        [SerializeField] int selectionTimes = 3;
-        [SerializeField] float resetDelay = 2;
+        [SerializeField] LevelData[] levelsData;
+        [SerializeField] Button startLineButton;
         [SerializeField] float showSequenceDelay = 1;
-        const float tileSelectionDuration = 1;
         Button[] tiles;
         Dictionary<Button, int> tileSequence = new();
         Dictionary<Button, ColorBlock> originalTileColors = new();
         int tileSequenceCount = 0;
+        int currentLevel = 0;
         bool isSimulatingClick = false;
+        bool isStartButtonPressed = false;
+
+        [System.Serializable]
+        struct LevelData
+        {
+            public int sequenceLength;
+            public float tileSelectionDuration;
+        }
 
         void Start()
         {
             FillTiles();
+
+            HandleButtonPressedEvent(startLineButton, a => isStartButtonPressed = true);
+
             StartCoroutine(TileSelectionSequence(true));
         }
 
         void FillTiles()
         {
-            tiles = new Button[transform.childCount];
+            Transform[] filteredChildren = GetFilteredChildren().ToArray();
 
-            for(int i = 0; i < transform.childCount; i++)
+            tiles = new Button[filteredChildren.Count()];
+
+            for(int i = 0; i < filteredChildren.Length; i++)
             {
-                Button tile = transform.GetChild(i).GetComponent<Button>();
+                Button tile = filteredChildren[i].GetComponent<Button>();
                 tiles[i] = tile;
                 originalTileColors[tile] = tile.colors;
-                HandleTilePressedEvent(tile);
+                HandleButtonPressedEvent(tile, a => CheckTileSequence(tile));
             }
         }
 
-        void HandleTilePressedEvent(Button tile)
+        IEnumerable<Transform> GetFilteredChildren()
         {
-            EventTrigger trigger = tile.gameObject.AddComponent<EventTrigger>();
+            for(int i = 0; i < transform.childCount; i++)
+            {
+                Transform child = transform.GetChild(i);
+
+                if(child.CompareTag("Tile"))
+                {
+                    yield return child;
+                }
+            }
+        }
+
+        void HandleButtonPressedEvent(Button button, UnityAction<BaseEventData> action)
+        {
+            EventTrigger trigger = button.gameObject.AddComponent<EventTrigger>();
             EventTrigger.Entry entry = new();
 
             entry.eventID = EventTriggerType.PointerDown; 
-            entry.callback.AddListener(a => CheckTileSequence(tile));
+            entry.callback.AddListener(action);
 
             trigger.triggers.Add(entry);
         }
@@ -60,8 +87,9 @@ namespace PixelWorld.FabulousFred
             {
                 tileSequenceCount++;
 
-                if(tileSequenceCount == selectionTimes)
+                if(tileSequenceCount == levelsData[currentLevel].sequenceLength)
                 {
+                    CycleCurrentLevel();
                     tileSequenceCount = 0;
                     StartCoroutine(NewSequenceRoutine());
                 }
@@ -69,7 +97,7 @@ namespace PixelWorld.FabulousFred
             else
             {
                 tileSequenceCount = 0;
-                StartCoroutine(ResetSequenceRoutine());
+                StartCoroutine(FailedSequenceRoutine());
             }
         }
 
@@ -78,7 +106,9 @@ namespace PixelWorld.FabulousFred
             SetTilesInteraction(false);
             SetTilesColor(Color.green);
 
-            yield return new WaitForSeconds(resetDelay);
+            yield return new WaitUntil(() => isStartButtonPressed);
+
+            startLineButton.interactable = false;
 
             ResetTilesColor();
 
@@ -88,12 +118,14 @@ namespace PixelWorld.FabulousFred
             SetTilesInteraction(true);
         }
 
-        IEnumerator ResetSequenceRoutine()
+        IEnumerator FailedSequenceRoutine()
         {
             SetTilesInteraction(false);
             SetTilesColor(Color.red);
 
-            yield return new WaitForSeconds(resetDelay);
+            isStartButtonPressed = false;
+
+            yield return new WaitUntil(() => isStartButtonPressed);
 
             ResetTilesColor();
 
@@ -113,7 +145,7 @@ namespace PixelWorld.FabulousFred
             {
                 tileSequence.Clear();
 
-                for(int i = 0; i < selectionTimes; i++)
+                for(int i = 0; i < levelsData[currentLevel].sequenceLength; i++)
                 {
                     Button randomTile;
 
@@ -137,12 +169,19 @@ namespace PixelWorld.FabulousFred
             SetTilesInteraction(true);
         }
 
+        void CycleCurrentLevel()
+        {
+            if(currentLevel < levelsData.Length - 1)
+            {
+                currentLevel++;
+            }
+        }
 
         void SetTilesInteraction(bool enabled)
         {
             foreach(var tile in tiles)
             {
-                tile.GetComponent<Image>().raycastTarget = enabled;
+                SetButtonInteraction(tile, enabled);
             }
         }
 
@@ -172,10 +211,15 @@ namespace PixelWorld.FabulousFred
             }
         }
 
+        void SetButtonInteraction(Button button, bool enabled)
+        {
+            button.GetComponent<Image>().raycastTarget = enabled;
+        }
+
         IEnumerator SimulateClickRoutine(Button tile)
         {
             ExecuteEvents.Execute(tile.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
-            yield return new WaitForSeconds(tileSelectionDuration);
+            yield return new WaitForSeconds(levelsData[currentLevel].tileSelectionDuration);
             ExecuteEvents.Execute(tile.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
         }
     }

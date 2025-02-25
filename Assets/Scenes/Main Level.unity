@@ -381,6 +381,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Fabulous Fred UI
       objectReference: {fileID: 0}
+    - target: {fileID: 3888988314591307994, guid: 67778ffd94a88cd45910de981416b12e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4121924538060570205, guid: 67778ffd94a88cd45910de981416b12e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
