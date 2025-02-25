@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 2573689117710956892}
   m_Layer: 5
   m_Name: Button (3)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -268,7 +268,7 @@ GameObject:
   - component: {fileID: 5411833226557681799}
   m_Layer: 5
   m_Name: Button (8)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -388,7 +388,7 @@ GameObject:
   - component: {fileID: 4951058311053663218}
   m_Layer: 5
   m_Name: Button (7)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -508,7 +508,7 @@ GameObject:
   - component: {fileID: 9180571964305441440}
   m_Layer: 5
   m_Name: Button
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -628,7 +628,7 @@ GameObject:
   - component: {fileID: 3661653800710379690}
   - component: {fileID: 6844615768050897931}
   m_Layer: 5
-  m_Name: Finish Line
+  m_Name: Finish Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -770,7 +770,7 @@ GameObject:
   - component: {fileID: 4388081667802338907}
   m_Layer: 5
   m_Name: Button (4)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -890,7 +890,7 @@ GameObject:
   - component: {fileID: 6156625461684233617}
   m_Layer: 5
   m_Name: Button (1)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1010,7 +1010,7 @@ GameObject:
   - component: {fileID: 280137182805681014}
   m_Layer: 5
   m_Name: Button (6)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1264,7 +1264,7 @@ GameObject:
   - component: {fileID: 7189765237310357154}
   m_Layer: 5
   m_Name: Button (2)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1384,7 +1384,7 @@ GameObject:
   - component: {fileID: 6263406589945550247}
   m_Layer: 5
   m_Name: Button (5)
-  m_TagString: Tile
+  m_TagString: Sequencer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1504,7 +1504,7 @@ GameObject:
   - component: {fileID: 3567041416514439199}
   - component: {fileID: 2319028988979836058}
   m_Layer: 5
-  m_Name: Start Line
+  m_Name: Start Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1758,14 +1758,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelsData:
   - sequenceLength: 3
-    tileSelectionDuration: 1
+    buttonSelectionDuration: 1
   - sequenceLength: 5
-    tileSelectionDuration: 0.8
+    buttonSelectionDuration: 0.8
   - sequenceLength: 7
-    tileSelectionDuration: 0.6
+    buttonSelectionDuration: 0.6
   - sequenceLength: 7
-    tileSelectionDuration: 0.4
+    buttonSelectionDuration: 0.4
   - sequenceLength: 7
-    tileSelectionDuration: 0.2
-  startLineButton: {fileID: 3567041416514439199}
+    buttonSelectionDuration: 0.2
+  startButton: {fileID: 3567041416514439199}
   showSequenceDelay: 1

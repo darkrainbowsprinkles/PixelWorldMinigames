@@ -11,12 +11,12 @@ namespace PixelWorld.FabulousFred
     public class LaneUI : MonoBehaviour
     {
         [SerializeField] LevelData[] levelsData;
-        [SerializeField] Button startLineButton;
+        [SerializeField] Button startButton;
         [SerializeField] float showSequenceDelay = 1;
-        Button[] tiles;
-        Dictionary<Button, int> tileSequence = new();
-        Dictionary<Button, ColorBlock> originalTileColors = new();
-        int tileSequenceCount = 0;
+        Button[] buttons;
+        Dictionary<Button, int> buttonSequence = new();
+        Dictionary<Button, ColorBlock> originalButtonColors = new();
+        int buttonSequenceCount = 0;
         int currentLevel = 0;
         bool isSimulatingClick = false;
         bool isStartButtonPressed = false;
@@ -25,30 +25,30 @@ namespace PixelWorld.FabulousFred
         struct LevelData
         {
             public int sequenceLength;
-            public float tileSelectionDuration;
+            public float buttonSelectionDuration;
         }
 
         void Start()
         {
-            FillTiles();
+            FillButtons();
 
-            HandleButtonPressedEvent(startLineButton, a => isStartButtonPressed = true);
+            HandleButtonPressedEvent(startButton, a => isStartButtonPressed = true);
 
-            StartCoroutine(TileSelectionSequence(true));
+            StartCoroutine(ButtonSelectionSequence(true));
         }
 
-        void FillTiles()
+        void FillButtons()
         {
             Transform[] filteredChildren = GetFilteredChildren().ToArray();
 
-            tiles = new Button[filteredChildren.Count()];
+            buttons = new Button[filteredChildren.Count()];
 
             for(int i = 0; i < filteredChildren.Length; i++)
             {
-                Button tile = filteredChildren[i].GetComponent<Button>();
-                tiles[i] = tile;
-                originalTileColors[tile] = tile.colors;
-                HandleButtonPressedEvent(tile, a => CheckTileSequence(tile));
+                Button button = filteredChildren[i].GetComponent<Button>();
+                buttons[i] = button;
+                originalButtonColors[button] = button.colors;
+                HandleButtonPressedEvent(button, a => CheckButtonsSequence(button));
             }
         }
 
@@ -58,7 +58,7 @@ namespace PixelWorld.FabulousFred
             {
                 Transform child = transform.GetChild(i);
 
-                if(child.CompareTag("Tile"))
+                if(child.CompareTag("Sequencer"))
                 {
                     yield return child;
                 }
@@ -76,74 +76,74 @@ namespace PixelWorld.FabulousFred
             trigger.triggers.Add(entry);
         }
 
-        void CheckTileSequence(Button tile)
+        void CheckButtonsSequence(Button button)
         {
             if(isSimulatingClick)
             {
                 return;
             }
 
-            if(tileSequence.ContainsKey(tile) && tileSequence[tile] == tileSequenceCount)
+            if(buttonSequence.ContainsKey(button) && buttonSequence[button] == buttonSequenceCount)
             {
-                tileSequenceCount++;
+                buttonSequenceCount++;
 
-                if(tileSequenceCount == levelsData[currentLevel].sequenceLength)
+                if(buttonSequenceCount == levelsData[currentLevel].sequenceLength)
                 {
                     CycleCurrentLevel();
-                    tileSequenceCount = 0;
+                    buttonSequenceCount = 0;
                     StartCoroutine(NewSequenceRoutine());
                 }
             }
             else
             {
-                tileSequenceCount = 0;
+                buttonSequenceCount = 0;
                 StartCoroutine(FailedSequenceRoutine());
             }
         }
 
         IEnumerator NewSequenceRoutine()
         {
-            SetTilesInteraction(false);
-            SetTilesColor(Color.green);
+            SetAllButtonsInteraction(false);
+            SetAllButtonsColor(Color.green);
+            
+            isStartButtonPressed = false;
 
             yield return new WaitUntil(() => isStartButtonPressed);
 
-            startLineButton.interactable = false;
-
-            ResetTilesColor();
+            ResetAllButtonsColor();
 
             yield return new WaitForSeconds(showSequenceDelay);
-            yield return StartCoroutine(TileSelectionSequence(true));
+            yield return StartCoroutine(ButtonSelectionSequence(true));
 
-            SetTilesInteraction(true);
+            SetAllButtonsInteraction(true);
         }
 
         IEnumerator FailedSequenceRoutine()
         {
-            SetTilesInteraction(false);
-            SetTilesColor(Color.red);
+            SetAllButtonsInteraction(false);
+            SetAllButtonsColor(Color.red);
 
             isStartButtonPressed = false;
 
             yield return new WaitUntil(() => isStartButtonPressed);
 
-            ResetTilesColor();
+            ResetAllButtonsColor();
 
             yield return new WaitForSeconds(showSequenceDelay);
-            yield return StartCoroutine(TileSelectionSequence(false));
+            yield return StartCoroutine(ButtonSelectionSequence(false));
 
-            SetTilesInteraction(true);
+            SetAllButtonsInteraction(true);
         }
 
-        IEnumerator TileSelectionSequence(bool generateNewSequence)
+        IEnumerator ButtonSelectionSequence(bool generateNewSequence)
         {
-            SetTilesInteraction(false);
+            SetAllButtonsInteraction(false);
 
             isSimulatingClick = true;
 
             if(generateNewSequence)
             {
-                tileSequence.Clear();
+                buttonSequence.Clear();
 
                 for(int i = 0; i < levelsData[currentLevel].sequenceLength; i++)
                 {
@@ -151,22 +151,22 @@ namespace PixelWorld.FabulousFred
 
                     do
                     {
-                        randomTile = tiles[Random.Range(0, tiles.Length)];
+                        randomTile = buttons[Random.Range(0, buttons.Length)];
                     } 
-                    while(tileSequence.ContainsKey(randomTile));
+                    while(buttonSequence.ContainsKey(randomTile));
 
-                    tileSequence[randomTile] = i;
+                    buttonSequence[randomTile] = i;
                 }
             }
   
-            foreach(var key in tileSequence.Keys)
+            foreach(var key in buttonSequence.Keys)
             {
                 yield return StartCoroutine(SimulateClickRoutine(key));
             }
     
             isSimulatingClick = false;
 
-            SetTilesInteraction(true);
+            SetAllButtonsInteraction(true);
         }
 
         void CycleCurrentLevel()
@@ -177,37 +177,37 @@ namespace PixelWorld.FabulousFred
             }
         }
 
-        void SetTilesInteraction(bool enabled)
+        void SetAllButtonsInteraction(bool enabled)
         {
-            foreach(var tile in tiles)
+            foreach(var tile in buttons)
             {
                 SetButtonInteraction(tile, enabled);
             }
         }
 
-        void SetTilesColor(Color color)
+        void SetAllButtonsColor(Color color)
         {
-            foreach(var tile in tiles)
+            foreach(var tile in buttons)
             {
-                SetTileColor(tile, color);
+                SetButtonColor(tile, color);
             }
         }
         
-        void SetTileColor(Button tile, Color color)
+        void SetButtonColor(Button button, Color color)
         {
-            ColorBlock colorBlock = tile.colors;
+            ColorBlock colorBlock = button.colors;
             colorBlock.normalColor = color;
             colorBlock.selectedColor = color;
             colorBlock.pressedColor = color;
             colorBlock.highlightedColor = color;
-            tile.colors = colorBlock;
+            button.colors = colorBlock;
         }
 
-        void ResetTilesColor()
+        void ResetAllButtonsColor()
         {
-            foreach(var tile in tiles)
+            foreach(var tile in buttons)
             {
-                tile.colors = originalTileColors[tile];
+                tile.colors = originalButtonColors[tile];
             }
         }
 
@@ -216,11 +216,11 @@ namespace PixelWorld.FabulousFred
             button.GetComponent<Image>().raycastTarget = enabled;
         }
 
-        IEnumerator SimulateClickRoutine(Button tile)
+        IEnumerator SimulateClickRoutine(Button button)
         {
-            ExecuteEvents.Execute(tile.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
-            yield return new WaitForSeconds(levelsData[currentLevel].tileSelectionDuration);
-            ExecuteEvents.Execute(tile.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
+            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
+            yield return new WaitForSeconds(levelsData[currentLevel].buttonSelectionDuration);
+            ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
         }
     }
 }
