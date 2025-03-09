@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -15,7 +16,9 @@ namespace PixelWorld.FabulousFred
         [SerializeField] float buttonSelectionDuration = 1;
         [SerializeField] float restartSequenceDelay = 5;
         [SerializeField] float walkTime = 5;
+        [SerializeField] float showPointsDelay = 1;
         [SerializeField] Transform sequencerButtonsContainer;
+        [SerializeField] TMP_Text scoreText;
         Button[] sequencerButtons;
         Dictionary<Button, int> sequenceLookup = new();
         Dictionary<Button, ColorBlock> originalColorsLookup = new();
@@ -84,9 +87,8 @@ namespace PixelWorld.FabulousFred
 
                 if(currentSequenceIndex >= sequenceLookup.Count)
                 {
-                    SetAllButtonsColor(Color.green);
-                    SetAllButtonsInteraction(false);
                     StopAllCoroutines();
+                    StartCoroutine(ShowScoreRoutine());
                 }
 
                 if(currentSequenceIndex >= sequenceLookup.Count / 2)
@@ -134,6 +136,17 @@ namespace PixelWorld.FabulousFred
             }
         }
 
+        IEnumerator ShowScoreRoutine()
+        {
+            SetAllButtonsColor(Color.green);
+            SetAllButtonsInteraction(false);
+            
+            yield return new WaitForSeconds(showPointsDelay);
+
+            scoreText.enabled = true;
+            scoreText.text = $"Puntaje:{score.ToString()}";
+        }
+        
         IEnumerator ButtonSequenceRoutine()
         {
             bool showHalfSequence = true;

@@ -3844,17 +3844,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7238214503601466218}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5872210278154069162}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -1.013}
-  m_SizeDelta: {x: 0, y: -3.947}
+  m_AnchoredPosition: {x: 0.000000059605, y: 0}
+  m_SizeDelta: {x: 3.5444, y: -3.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1362728314694577826
 CanvasRenderer:
@@ -3884,7 +3884,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 9999
+  m_text: 'Puntaje: 9999'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5ff30ae9d7e79bf4986c77771e39c60c, type: 2}
   m_sharedMaterial: {fileID: 9088115419540069172, guid: 5ff30ae9d7e79bf4986c77771e39c60c, type: 2}
@@ -3893,8 +3893,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4289835447
-  m_fontColor: {r: 0.7169812, g: 0.6933073, b: 0.6933073, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -4528,7 +4528,9 @@ MonoBehaviour:
   buttonSelectionDuration: 1
   restartSequenceDelay: 2
   walkTime: 5
+  showPointsDelay: 1
   sequencerButtonsContainer: {fileID: 1408517245966389611}
+  scoreText: {fileID: 1179329206359921658}
 --- !u!1 &8177698220116943257
 GameObject:
   m_ObjectHideFlags: 0
