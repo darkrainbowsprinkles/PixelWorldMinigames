@@ -4525,8 +4525,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sequenceScorePoints: 10
   sequencePenaltyPoints: 2
-  buttonSelectionDuration: 0.2
+  buttonSelectionDuration: 1
   restartSequenceDelay: 2
+  walkTime: 5
   sequencerButtonsContainer: {fileID: 1408517245966389611}
 --- !u!1 &8177698220116943257
 GameObject:

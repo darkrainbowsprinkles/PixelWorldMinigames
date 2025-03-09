@@ -22,6 +22,7 @@ namespace PixelWorld.FabulousFred
         int score = 0;
         int currentSequenceIndex = 0;
         bool selectionSequenceActive = false;
+        bool halfReached = false;
         const int rowSize = 3;
 
         void Start()
@@ -80,12 +81,34 @@ namespace PixelWorld.FabulousFred
             {
                 currentSequenceIndex++;
                 score += sequenceScorePoints;
+
+                if(currentSequenceIndex >= sequenceLookup.Count)
+                {
+                    SetAllButtonsColor(Color.green);
+                    SetAllButtonsInteraction(false);
+                    StopAllCoroutines();
+                }
+
+                if(currentSequenceIndex >= sequenceLookup.Count / 2)
+                {
+                    TraverseHalfButtons(button => SetButtonColor(button, Color.green));
+                    halfReached = true;
+                }
             }
             else
             {
-                currentSequenceIndex = 0;
                 score -= sequencePenaltyPoints;
-                StartCoroutine(RestartSequenceRoutine());
+                StartCoroutine(PenaltyRoutine());
+            }
+        }
+
+        void TraverseHalfButtons(System.Action<Button> action)
+        {
+            Button[] reversedButtons = sequencerButtons.Reverse().ToArray();
+
+            for(int i = 0; i < (reversedButtons.Length / 2) - 1; i++)
+            {
+                action.Invoke(reversedButtons[i]);
             }
         }
 
@@ -94,34 +117,59 @@ namespace PixelWorld.FabulousFred
             return sequenceLookup.ContainsKey(button) && sequenceLookup[button] == currentSequenceIndex;
         }
 
-        IEnumerator RestartSequenceRoutine()
+        IEnumerator PenaltyRoutine()
         {
             SetAllButtonsInteraction(false);
             SetAllButtonsColor(Color.red);
 
             yield return new WaitForSeconds(restartSequenceDelay);
 
+            currentSequenceIndex = 0;
             ResetAllButtonsColor();
+
+            if(halfReached)
+            {
+                currentSequenceIndex = sequenceLookup.Count / 2;
+                TraverseHalfButtons(button => SetButtonColor(button, Color.green));
+            }
         }
 
         IEnumerator ButtonSequenceRoutine()
         {
+            bool showHalfSequence = true;
+
             while(true)
             {
                 selectionSequenceActive = true;
 
                 SetAllButtonsInteraction(false);
+
+                int count = 0;
     
                 foreach(var key in sequenceLookup.Keys)
                 {
+                    if(showHalfSequence && count >= sequenceLookup.Count / 2)
+                    {
+                        break;
+                    }
+
+                    count++;
+
                     yield return StartCoroutine(SimulateClickRoutine(key));
                 }
 
                 SetAllButtonsInteraction(true);
 
+                if(halfReached)
+                {
+                    TraverseHalfButtons(button => SetButtonInteraction(button, false));
+                }
+
                 selectionSequenceActive = false;
 
                 yield return new WaitForSeconds(walkTime);
+
+                showHalfSequence = !showHalfSequence;
             }
         }
 
