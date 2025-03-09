@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -10,35 +10,25 @@ namespace PixelWorld.FabulousFred
 {
     public class FabulousFredLaneUI : MonoBehaviour
     {
-        [SerializeField] LevelData[] levelsData;
-        [SerializeField] int rightSequencePoints = 10;
-        [SerializeField] int mistakePenaltyPoints = 2;
+        [SerializeField] int sequenceScorePoints = 10;
+        [SerializeField] int sequencePenaltyPoints = 2;
+        [SerializeField] float buttonSelectionDuration = 1;
+        [SerializeField] float restartSequenceDelay = 5;
+        [SerializeField] float walkTime = 5;
         [SerializeField] Transform sequencerButtonsContainer;
-        [SerializeField] Button startButton;
-        [SerializeField] TMP_Text levelText;
-        [SerializeField] TMP_Text scoreText;
         Button[] sequencerButtons;
-        Dictionary<int, Dictionary<Button, int>> sequenceLookup = new();
+        Dictionary<Button, int> sequenceLookup = new();
         Dictionary<Button, ColorBlock> originalColorsLookup = new();
-        int sequenceCount = 0;
-        int currentLevel = 0;
         int score = 0;
-        bool inSelectionSequence = false;
-
-        [System.Serializable]
-        struct LevelData
-        {
-            public int sequenceLength;
-            public float buttonSelectionDuration;
-        }
+        int currentSequenceIndex = 0;
+        bool selectionSequenceActive = false;
+        const int rowSize = 3;
 
         void Start()
         {
             FillSequencerButtons();
             FillSequenceLookup();
-            UpdateLevelText();
-            UpdateScore(0);
-            HandleButtonPressedEvent(startButton, a => StartCoroutine(ButtonSequenceRoutine()));
+            StartCoroutine(ButtonSequenceRoutine());
         }
 
         void FillSequencerButtons()
@@ -56,25 +46,15 @@ namespace PixelWorld.FabulousFred
 
         void FillSequenceLookup()
         {
-            for(int i = 0; i < levelsData.Length; i++)
+            int count = 0;
+
+            Button[] reversedButtons = sequencerButtons.Reverse().ToArray();
+
+            for(int i = 0; i < reversedButtons.Length; i += rowSize)
             {
-                Dictionary<Button, int> sequenceIndexes = new();
-
-                LevelData levelData = levelsData[i];
-
-                for(int j = 0; j < levelData.sequenceLength; j++)
-                {
-                    Button randomButton;
-                    do
-                    {
-                        randomButton = sequencerButtons[Random.Range(0, sequencerButtons.Length)];
-                    } 
-                    while(sequenceIndexes.ContainsKey(randomButton));
-
-                    sequenceIndexes[randomButton] = j;
-                }
-
-                sequenceLookup[i] = sequenceIndexes;
+                Button randomButtonInRow = reversedButtons[Random.Range(i, i + rowSize)];
+                sequenceLookup[randomButtonInRow] = count;
+                count++;
             }
         }
 
@@ -91,81 +71,58 @@ namespace PixelWorld.FabulousFred
 
         void CheckButtonsSequence(Button button)
         {
-            if(inSelectionSequence)
+            if(selectionSequenceActive)
             {
                 return;
             }
 
             if(ButtonInSequence(button))
             {
-                sequenceCount++;
-
-                UpdateScore(rightSequencePoints);
-
-                if(LevelSucceded())
-                {
-                    sequenceCount = 0;
-                    CycleCurrentLevel();
-                    SetAllButtonsInteraction(false);
-                    SetAllButtonsColor(Color.green);
-                }
+                currentSequenceIndex++;
+                score += sequenceScorePoints;
             }
             else
             {
-                UpdateScore(-mistakePenaltyPoints);
-                sequenceCount = 0;
-                SetAllButtonsInteraction(false);
-                SetAllButtonsColor(Color.red);
+                currentSequenceIndex = 0;
+                score -= sequencePenaltyPoints;
+                StartCoroutine(RestartSequenceRoutine());
             }
-        }
-
-        void UpdateScore(int points)
-        {
-            score += points;
-            scoreText.text = score.ToString();
         }
 
         bool ButtonInSequence(Button button)
         {
-            return sequenceLookup[currentLevel].ContainsKey(button) && sequenceLookup[currentLevel][button] == sequenceCount;
+            return sequenceLookup.ContainsKey(button) && sequenceLookup[button] == currentSequenceIndex;
         }
 
-        bool LevelSucceded()
+        IEnumerator RestartSequenceRoutine()
         {
-            return sequenceCount == levelsData[currentLevel].sequenceLength;
+            SetAllButtonsInteraction(false);
+            SetAllButtonsColor(Color.red);
+
+            yield return new WaitForSeconds(restartSequenceDelay);
+
+            ResetAllButtonsColor();
         }
 
         IEnumerator ButtonSequenceRoutine()
         {
-            inSelectionSequence = true;
-
-            ResetAllButtonsColor();
-            SetAllButtonsInteraction(false);
-            SetButtonInteraction(startButton, false);
-  
-            foreach(var key in sequenceLookup[currentLevel].Keys)
+            while(true)
             {
-                yield return StartCoroutine(SimulateClickRoutine(key));
-            }
+                selectionSequenceActive = true;
 
-            SetAllButtonsInteraction(true);
-            SetButtonInteraction(startButton, true);
+                SetAllButtonsInteraction(false);
     
-            inSelectionSequence = false;
-        }
+                foreach(var key in sequenceLookup.Keys)
+                {
+                    yield return StartCoroutine(SimulateClickRoutine(key));
+                }
 
-        void CycleCurrentLevel()
-        {
-            if(currentLevel < levelsData.Length - 1)
-            {
-                currentLevel++;
-                UpdateLevelText();
+                SetAllButtonsInteraction(true);
+
+                selectionSequenceActive = false;
+
+                yield return new WaitForSeconds(walkTime);
             }
-        }
-
-        void UpdateLevelText()
-        {
-            levelText.text = $"Lvl:{currentLevel + 1}";
         }
 
         void SetAllButtonsInteraction(bool enabled)
@@ -210,8 +167,8 @@ namespace PixelWorld.FabulousFred
         IEnumerator SimulateClickRoutine(Button button)
         {
             ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
-            yield return new WaitForSeconds(levelsData[currentLevel].buttonSelectionDuration);
+            yield return new WaitForSeconds(buttonSelectionDuration);
             ExecuteEvents.Execute(button.gameObject, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
         }
-    }
+    } 
 }
