@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace PixelWorld.FabulousFred
 {
@@ -27,12 +28,25 @@ namespace PixelWorld.FabulousFred
         bool selectionSequenceActive = false;
         bool halfReached = false;
         const int rowSize = 3;
+        int[] sequenceIndexes;
 
-        void Start()
+        public void SetData(int[] sequenceIndexes)
         {
+            this.sequenceIndexes = sequenceIndexes;
+
             FillSequencerButtons();
             FillSequenceLookup();
             StartCoroutine(ButtonSequenceRoutine());
+        }
+
+        public int GetButtonCount()
+        {
+            return sequencerButtonsContainer.childCount;
+        }
+
+        public int GetRowSize()
+        {
+            return rowSize;
         }
 
         void FillSequencerButtons()
@@ -50,15 +64,13 @@ namespace PixelWorld.FabulousFred
 
         void FillSequenceLookup()
         {
-            int count = 0;
+            Button[] reversedButton = sequencerButtons.Reverse().ToArray();
 
-            Button[] reversedButtons = sequencerButtons.Reverse().ToArray();
-
-            for(int i = 0; i < reversedButtons.Length; i += rowSize)
+            for(int i = 0; i < sequenceIndexes.Length; i++)
             {
-                Button randomButtonInRow = reversedButtons[Random.Range(i, i + rowSize)];
-                sequenceLookup[randomButtonInRow] = count;
-                count++;
+                int buttonIndex = sequenceIndexes[i];
+
+                sequenceLookup[reversedButton[buttonIndex]] = i;
             }
         }
 
@@ -94,6 +106,7 @@ namespace PixelWorld.FabulousFred
                 if(currentSequenceIndex >= sequenceLookup.Count / 2)
                 {
                     TraverseHalfButtons(button => SetButtonColor(button, Color.green));
+                    TraverseHalfButtons(button => SetButtonInteraction(button, false));
                     halfReached = true;
                 }
             }
@@ -143,8 +156,9 @@ namespace PixelWorld.FabulousFred
             
             yield return new WaitForSeconds(showPointsDelay);
 
-            scoreText.enabled = true;
-            scoreText.text = $"Puntaje:{score.ToString()}";
+            sequencerButtonsContainer.gameObject.SetActive(false);
+            scoreText.gameObject.SetActive(true);
+            scoreText.text = $"Puntaje: {score.ToString()}";
         }
         
         IEnumerator ButtonSequenceRoutine()

@@ -1,15 +1,19 @@
+using System.Linq;
 using UnityEngine;
 
 namespace PixelWorld.FabulousFred
 {
     public class FabulousFredUI : MonoBehaviour
     {
-        [SerializeField, Range(1, 8)] int numberOfPlayers = 8;
         [SerializeField] FabulousFredLaneUI lanePrefab;
+        [SerializeField, Range(0,10)] int playerNumber = 10;
+        int[] sequenceIndexes;
 
         void Start()
         {
             RefreshLanes();
+            FillSequenceIndexes();
+            SpawnLanes();
         }
 
         void RefreshLanes()
@@ -18,10 +22,30 @@ namespace PixelWorld.FabulousFred
             {
                 Destroy(child.gameObject);
             }
+        }
 
-            for(int i = 0; i < numberOfPlayers; i++)
+        void FillSequenceIndexes()
+        {
+            int count = 0;
+            int buttonCount = lanePrefab.GetButtonCount();
+            int rowSize = lanePrefab.GetRowSize();
+
+            sequenceIndexes = new int[buttonCount / rowSize];
+
+            for(int i = 0; i < buttonCount; i += rowSize)
             {
-                Instantiate(lanePrefab, transform);
+                int randomButtonIndex = Random.Range(i, i + rowSize);
+                sequenceIndexes[count] = randomButtonIndex;
+                count++;
+            }
+        }
+
+        void SpawnLanes()
+        {
+            for(int i = 0; i < playerNumber; i++)
+            {
+                var laneInstance = Instantiate(lanePrefab, transform);
+                laneInstance.SetData(sequenceIndexes);
             }
         }
     }
