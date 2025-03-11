@@ -1,15 +1,16 @@
 using UnityEngine;
 
-namespace PixelWorld.Utils
+namespace PixelWorld.FabulousFred
 {
-    public class LaneManager : MonoBehaviour
+    public class LavaCoinsUI : MonoBehaviour
     {
         [SerializeField, Range(1, 10)] int numberOfPlayers = 10;
-        [SerializeField] GameObject lanePrefab;
+        [SerializeField] LavaCoinLaneUI lanePrefab;
 
         void Start()
         {
             RefreshLanes();
+            SpawnLanes();
         }
 
         void RefreshLanes()
@@ -18,7 +19,10 @@ namespace PixelWorld.Utils
             {
                 Destroy(child.gameObject);
             }
+        }
 
+        void SpawnLanes()
+        {
             for(int i = 0; i < numberOfPlayers; i++)
             {
                 Instantiate(lanePrefab, transform);
